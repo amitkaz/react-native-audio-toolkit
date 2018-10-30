@@ -27,7 +27,8 @@
 - (void)dealloc {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
-    [audioSession setActive:NO error:&error];
+// don't dealloc becuase it's controled by another process    
+//    [audioSession setActive:NO error:&error];
     
     if (error) {
         NSLog (@"RCTAudioRecorder: Could not deactivate current audio session. Error: %@", error);
@@ -77,7 +78,7 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
     // Initialize audio session
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
-    [audioSession setCategory:AVAudioSessionCategoryRecord error:&error];
+    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker error:&error];
     if (error) {
         NSDictionary* dict = [Helpers errObjWithCode:@"preparefail" withMessage:@"Failed to set audio session category"];
         callback(@[dict]);
@@ -149,18 +150,6 @@ RCT_EXPORT_METHOD(stop:(nonnull NSNumber *)recorderId withCallback:(RCTResponseS
     AVAudioRecorder *recorder = [[self recorderPool] objectForKey:recorderId];
     if (recorder) {
         [recorder stop];
-    } else {
-        NSDictionary* dict = [Helpers errObjWithCode:@"notfound" withMessage:@"Recorder with that id was not found"];
-        callback(@[dict]);
-        return;
-    }
-    callback(@[[NSNull null]]);
-}
-
-RCT_EXPORT_METHOD(pause:(nonnull NSNumber *)recorderId withCallback:(RCTResponseSenderBlock)callback) {
-    AVAudioRecorder *recorder = [[self recorderPool] objectForKey:recorderId];
-    if (recorder) {
-        [recorder pause];
     } else {
         NSDictionary* dict = [Helpers errObjWithCode:@"notfound" withMessage:@"Recorder with that id was not found"];
         callback(@[dict]);
